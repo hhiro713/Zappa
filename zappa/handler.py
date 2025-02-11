@@ -480,7 +480,7 @@ class LambdaHandler:
             return result
 
         # This is an API Gateway authorizer event
-        elif event.get("type") == "TOKEN":
+        elif event.get("type") == "TOKEN" or event.get("type") == "REQUEST":
             whole_function = self.settings.AUTHORIZER_FUNCTION
             if whole_function:
                 app_function = self.import_module_and_get_function(whole_function)

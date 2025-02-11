@@ -885,6 +885,15 @@ to change Zappa's behavior. Use these at your own risk!
         "api_key": "your_api_key_id", // optional, use an existing API key. The option "api_key_required" must be true to apply
         "apigateway_enabled": true, // Set to false if you don't want to create an API Gateway resource. Default true.
         "apigateway_description": "My funky application!", // Define a custom description for the API Gateway console. Default None.
+        "apigateway_response": {
+            "ACCESS_DENIED": {
+                "status_code": "403",
+                "response_template": {
+                    "text/html": "filename.html",
+                    "application/jsion": "filename.json"
+                }
+            }
+        },
         "assume_policy": "my_assume_policy.json", // optional, IAM assume policy JSON file
         "attach_policy": "my_attach_policy.json", // optional, IAM attach policy JSON file
         "apigateway_policy": "my_apigateway_policy.json", // optional, API Gateway resource policy JSON file
@@ -959,6 +968,7 @@ to change Zappa's behavior. Use these at your own risk!
         "iam_authorization": false, // optional, use IAM to require request signing. Default false. Note that enabling this will override the authorizer configuration.
         "include": ["your_special_library_to_load_at_handler_init"], // load special libraries into PYTHONPATH at handler init that certain modules cannot find on path
         "authorizer": {
+            "type": "TOKEN", //Type of Authorizer. Default 'TOKEN'. 'COGNITO_USER_POOLS' or 'REQUEST' is valid
             "function": "your_module.your_auth_function", // Local function to run for token validation. For more information about the function see below.
             "arn": "arn:aws:lambda:<region>:<account_id>:function:<function_name>", // Existing Lambda function to run for token validation.
             "result_ttl": 300, // Optional. Default 300. The time-to-live (TTL) period, in seconds, that specifies how long API Gateway caches authorizer results. Currently, the maximum TTL value is 3600 seconds.

@@ -1760,15 +1760,18 @@ class Zappa:
         authorizer_resource.Name = authorizer.get("name", "ZappaAuthorizer")
         authorizer_resource.Type = authorizer_type
         authorizer_resource.AuthorizerUri = uri
-        authorizer_resource.IdentitySource = "method.request.header.%s" % authorizer.get("token_header", "Authorization")
+        if authorizer_type == "TOKEN" or authorizer_type == "COGNITO_USER_POOLS":
+            authorizer_resource.IdentitySource = "method.request.header.%s" % authorizer.get("token_header", "Authorization")
         if identity_validation_expression:
             authorizer_resource.IdentityValidationExpression = identity_validation_expression
 
-        if authorizer_type == "TOKEN":
+        if authorizer_type == "TOKEN" or authorizer_type == "REQUEST":
             if not self.credentials_arn:
                 self.get_credentials_arn()
             authorizer_resource.AuthorizerResultTtlInSeconds = authorizer.get("result_ttl", 300)
             authorizer_resource.AuthorizerCredentials = self.credentials_arn
+        if authorizer_type == "REQUEST" and authorizer_resource.AuthorizerResultTtlInSeconds != 0:
+            authorizer_resource.IdentitySource = "method.request.header.%s" % authorizer.get("token_header", "Authorization")            
         if authorizer_type == "COGNITO_USER_POOLS":
             authorizer_resource.ProviderARNs = authorizer.get("provider_arns")
 
@@ -2013,6 +2016,23 @@ class Zappa:
             ],
         )
 
+    def put_gateway_response(self, api_id, response_type, status_code, response_templates):
+        """
+        Put API Gateway Response
+        """
+        response_template_map = {}
+        for key in response_templates:
+            with open(response_templates[key],'r', encoding='utf-8') as f:
+                s = f.read()
+                response_template_map[key] = s
+            
+        self.apigateway_client.put_gateway_response(
+            restApiId=api_id,
+            responseType=response_type,
+            statusCode=status_code,
+            responseTemplates=response_template_map,
+        )
+
     def get_api_keys(self, api_id, stage_name):
         """
         Generator that allows to iterate per API keys associated to an api_id and a stage_name.
@@ -2239,6 +2259,8 @@ class Zappa:
             auth_type = "AWS_IAM"
         elif authorizer:
             auth_type = authorizer.get("type", "CUSTOM")
+            if auth_type == "REQUEST":
+                auth_type = "CUSTOM"
 
         # build a fresh template
         self.cf_template = troposphere.Template()

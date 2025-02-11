@@ -884,6 +884,12 @@ class ZappaCLI:
                     api_id=api_id,
                     min_compression_size=self.stage_config.get("payload_minimum_compression_size", 0),
                 )
+            
+            # Add response type
+            if "apigateway_response" in self.stage_config:
+                for response_type in self.stage_config["apigateway_response"]:
+                    response = self.stage_config["apigateway_response"][response_type]
+                    self.zappa.put_gateway_response(api_id, response_type, response["status_code"], response["response_template"])                
 
             # Deploy the API!
             endpoint_url = self.deploy_api_gateway(api_id)
@@ -1105,6 +1111,11 @@ class ZappaCLI:
             else:
                 self.zappa.remove_api_compression(api_id=api_id)
 
+            # Add response type
+            if "apigateway_response" in self.stage_config:
+                for response_type in self.stage_config["apigateway_response"]:
+                    response = self.stage_config["apigateway_response"][response_type]
+                    self.zappa.put_gateway_response(api_id, response_type, response["status_code"], response["response_template"])
             # It looks a bit like we might actually be using this just to get the URL,
             # but we're also updating a few of the APIGW settings.
             endpoint_url = self.deploy_api_gateway(api_id)
